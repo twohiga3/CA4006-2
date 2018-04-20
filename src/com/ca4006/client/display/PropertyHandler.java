@@ -9,7 +9,7 @@ import com.ca4006.property.Property;
 
 public class PropertyHandler {
 
-	private static final String DOMAIN_PATH = "http://localhost:8080/JaxRS";
+	private static final String DOMAIN_PATH = "http://localhost:8080/CA4006";
 	static Client client = ClientBuilder.newClient();
 
 	public static void createProperty(String area, String type, int bedrooms, int bathrooms) {

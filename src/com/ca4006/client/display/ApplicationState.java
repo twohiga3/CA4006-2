@@ -5,20 +5,18 @@ import com.ca4006.property.Property;
 public class ApplicationState {
 
 	public enum PageType {
-		MENU, LIST, NOTFOUND,
+		MENU, LIST, NOTFOUND, PROPERTY_INFO
 	}
 
 	private PageType currentPage;
+	int currentlyViewing;
 	private Property[] propertyList;
 	private Property lastProperty;
 	private String userID = "this-is-not-yet-setup";
 
 	public ApplicationState() {
-		currentPage = PageType.LIST;
-	}
-
-	public void changePage(PageType page) {
-		currentPage = page;
+		currentPage = PageType.PROPERTY_INFO;
+		currentlyViewing = 0;
 	}
 
 	public Property[] getPropertyList(boolean refresh) {

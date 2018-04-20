@@ -1,12 +1,15 @@
 package com.ca4006.property;
 
 import java.io.InputStream;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -24,19 +27,28 @@ public class Property {
 	private int bedroomCount;
 	private int bathroomCount;
 
+	private int startingPrice;
+	private int currentBid;
+
+	@XmlTransient
+	private Lock biddingLock;
+
 	private static int propertyCount = 0;
 
 	public Property() {
 		super();
 	}
 
-	public Property(String area, String type, int bedroomCount, int bathroomCount) {
+	public Property(String area, String type, int bedroomCount, int bathroomCount, int startingPrice) {
 		super();
 		this.id = propertyCount++;
 		this.area = area;
 		this.type = type;
 		this.bedroomCount = bedroomCount;
 		this.bathroomCount = bathroomCount;
+		this.startingPrice = startingPrice;
+
+		this.biddingLock = new ReentrantLock();
 	}
 
 	public String toString() {
@@ -73,13 +85,10 @@ public class Property {
 
 			// Property Fields
 			String area = "UNKNOWN", type = "UNKNOWN";
-			int bedrooms = 0, bathrooms = 0;
-
-			System.out.println(root.getTagName());
+			int bedrooms = 0, bathrooms = 0, startingPrice = 0;
 
 			for (int i = 0; i < nodes.getLength(); i++) {
 				Element element = (Element) nodes.item(i);
-				System.out.println("");
 
 				if (element.getTagName().equals("area")) {
 					area = element.getTextContent();
@@ -89,12 +98,28 @@ public class Property {
 					bedrooms = Integer.parseInt(element.getTextContent());
 				} else if (element.getTagName().equals("bathrooms")) {
 					bathrooms = Integer.parseInt(element.getTextContent());
+				} else if (element.getTagName().equals("startingPrice")) {
+					startingPrice = Integer.parseInt(element.getTextContent());
 				}
 			}
 
-			return new Property(area, type, bedrooms, bathrooms);
+			return new Property(area, type, bedrooms, bathrooms, startingPrice);
 		} catch (Exception e) {
+			System.err.println(e.getStackTrace());
 			throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
 		}
+	}
+
+	public boolean bid(Bid b) {
+		try {
+			biddingLock.lock();
+			if (b.getValue() > currentBid && b.getValue() >= startingPrice) {
+				currentBid = b.getValue();
+				return true;
+			}
+		} finally {
+			biddingLock.unlock();
+		}
+		return false;
 	}
 }

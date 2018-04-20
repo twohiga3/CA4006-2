@@ -10,6 +10,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
+import com.ca4006.property.Bid.Status;
+
 @Path("property")
 @Singleton
 public class PropertyManager {
@@ -46,6 +48,25 @@ public class PropertyManager {
 		Property[] list = new Property[properties.size()];
 		properties.values().toArray(list);
 		return list;
+	}
+
+	@POST
+	@Path("bid")
+	@Produces("text/xml")
+	public Bid bid(InputStream in) {
+		Bid bid = Bid.readBid(in);
+		Property p = properties.get(bid.getPropertyID());
+		if (p == null) {
+			System.out.println("Property does not exist: " + bid.getPropertyID());
+			return null;
+		}
+
+		System.out.println("Bid: " + bid);
+		System.out.println("Bidding on Property: " + p);
+		boolean success = p.bid(bid);
+		bid.setStatus(success ? Status.ACCEPTED : Status.REJECTED);
+		System.out.println("Bid: " + bid);
+		return bid;
 	}
 
 }
